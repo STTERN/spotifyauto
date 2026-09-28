@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>Spotify Continuous Playback • 24/7 Autopilot</title>
+  <meta name="description" content="A lightweight, crash-resilient 24/7 continuous playback service connected to your Spotify account.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟢</text></svg>">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1" id="ambientGlow1"></div>
+  <div class="ambient-glow glow-2" id="ambientGlow2"></div>
+
+  <div class="app-container">
+    <!-- Header / Brand -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 5.524 4.477 10 10 10s10-4.476 10-10c0-5.523-4.477-10-10-10zm4.586 14.424c-.18.295-.563.387-.857.207-2.35-1.435-5.308-1.76-8.792-.963-.334.076-.666-.134-.743-.467-.076-.334.135-.666.468-.743 3.808-.87 7.076-.496 9.717 1.11.294.18.386.562.207.856zm1.223-2.723c-.227.369-.714.484-1.083.256-2.69-1.653-6.79-2.132-9.972-1.167-.414.125-.853-.11-.979-.524-.125-.413.111-.853.524-.978 3.633-1.102 8.148-.568 11.254 1.33.369.227.484.714.256 1.083zm.106-2.836C14.692 8.95 9.375 8.775 6.297 9.71c-.494.15-1.018-.13-1.168-.624-.15-.494.13-1.018.624-1.168 3.532-1.072 9.404-.866 13.115 1.336.445.264.59.838.327 1.282-.264.444-.838.59-1.28.328z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Spotify Minutes</h1>
+          <p class="brand-subtitle">Continuous Autopilot Player</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div id="authStatusBadge" class="status-pill status-unauthenticated">
+          <span class="status-dot"></span>
+          <span id="authStatusText">Checking auth...</span>
+        </div>
+        <button id="authBtn" class="btn btn-secondary btn-sm" aria-label="Spotify Authentication">
+          Connect Spotify
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Master ON/OFF Switch & Service Health -->
+      <section class="card control-card">
+        <div class="card-header">
+          <span class="card-label">Master Playback Control</span>
+          <span class="live-tag"><span class="pulse-dot"></span> WATCHDOG</span>
+        </div>
+
+        <div class="toggle-center-wrapper">
+          <div class="power-toggle-outer">
+            <button id="masterToggleBtn" class="power-btn" aria-label="Toggle Service ON/OFF">
+              <div class="power-inner">
+                <svg class="power-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                  <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
+                <span id="powerStateLabel" class="power-state-label">OFF</span>
+              </div>
+              <div class="power-ring-glow"></div>
+            </button>
+          </div>
+          <p id="serviceStateDescription" class="control-hint">Click to turn ON continuous playback</p>
+        </div>
+
+        <!-- Uptime & Metrics Strip -->
+        <div class="metrics-grid">
+          <div class="metric-box">
+            <span class="metric-title">Service Uptime</span>
+            <span id="uptimeDisplay" class="metric-val mono">00:00:00</span>
+            <span class="metric-sub">Continuous session</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-title">Songs Streamed</span>
+            <span id="songsStreamedDisplay" class="metric-val mono">0</span>
+            <span class="metric-sub">Completed tracks</span>
+          </div>
+          <div class="metric-box">
+            <span class="metric-title">Target Device</span>
+            <span id="activeDeviceDisplay" class="metric-val device-name">Detecting...</span>
+            <span id="deviceTypeDisplay" class="metric-sub">Spotify Connect</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live Track Card -->
+      <section class="card now-playing-card">
+        <div class="card-header">
+          <span class="card-label">Now Streaming</span>
+          <div id="playbackStateBadge" class="status-pill status-idle">
+            <span class="status-dot"></span>
+            <span id="playbackStateText">Idle</span>
+          </div>
+        </div>
+
+        <div class="track-hero">
+          <div class="artwork-container">
+            <img id="trackArtwork" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%23181818'/%3E%3Cpath d='M150 110 A 40 40 0 0 0 150 190 A 40 40 0 0 0 150 110 Z' fill='%23282828'/%3E%3C/svg%3E" alt="Album Artwork" class="artwork-img">
+            <div id="artworkVinylRing" class="vinyl-ring"></div>
+          </div>
+
+          <div class="track-meta">
+            <h2 id="trackTitle" class="track-title">No Track Active</h2>
+            <p id="trackArtist" class="track-artist">Turn service ON to begin</p>
+            <p id="trackAlbum" class="track-album">—</p>
+
+            <!-- Progress bar -->
+            <div class="progress-wrap">
+              <div class="progress-bar">
+                <div id="trackProgressFill" class="progress-fill" style="width: 0%;"></div>
+              </div>
+              <div class="progress-times">
+                <span id="timeCurrent" class="mono">0:00</span>
+                <span id="timeTotal" class="mono">0:00</span>
+              </div>
+            </div>
+
+            <!-- Quick controls -->
+            <div class="track-actions">
+              <button id="skipNextBtn" class="btn btn-secondary btn-icon" title="Skip to next song" aria-label="Next Track">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M5 4l10 8-10 8V4zm11 0h3v16h-3V4z"/>
+                </svg>
+                <span>Next Track</span>
+              </button>
+              <button id="webPlayerBtn" class="btn btn-secondary btn-icon" title="Toggle Built-in Web Browser Player">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                </svg>
+                <span id="webPlayerBtnText">Play in This Browser</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Settings Panel -->
+      <section class="card settings-card">
+        <div class="card-header">
+          <span class="card-label">Playlist & Target Device Settings</span>
+          <button id="refreshDevicesBtn" class="btn btn-ghost btn-sm" title="Scan for Spotify devices">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+            Scan Devices
+          </button>
+        </div>
+
+        <div class="settings-form-grid">
+          <!-- Playlist Picker -->
+          <div class="form-group">
+            <label for="playlistInput" class="form-label">
+              <span>Spotify Playlist Link or URI</span>
+              <span class="label-hint">Paste any public or private Spotify playlist URL</span>
+            </label>
+            <div class="input-with-button">
+              <input type="text" id="playlistInput" class="input-field" placeholder="https://open.spotify.com/playlist/... or spotify:playlist:..." spellcheck="false">
+              <button id="savePlaylistBtn" class="btn btn-primary">Save Playlist</button>
+            </div>
+            <div id="playlistMetaPreview" class="playlist-preview-pill hidden">
+              <span class="playlist-icon">🎧</span>
+              <span id="playlistPreviewName">Loaded Playlist</span>
+            </div>
+          </div>
+
+          <!-- Device Picker -->
+          <div class="form-group">
+            <label for="deviceSelect" class="form-label">
+              <span>Target Playback Device</span>
+              <span class="label-hint">Where music streams when your computer/browser is closed</span>
+            </label>
+            <div class="input-with-button">
+              <select id="deviceSelect" class="input-field select-field">
+                <option value="">Auto-detect first available device</option>
+              </select>
+              <button id="selectDeviceBtn" class="btn btn-secondary">Connect Device</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer with Resilience Status -->
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span class="auto-recovery-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Auto-Recovery Active (Token Rotation • Network Retry • Restart Shield)
+        </span>
+      </div>
+      <div class="footer-right">
+        <span id="healthPing" class="mono text-muted">Health: 200 OK</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <!-- Spotify Web Playback SDK (Official) -->
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
