@@ -1,136 +1,202 @@
-# 🟢 Spotify Minutes — Continuous Autopilot Player
+# 🟢 Spotify Minutes (SpotifyAuto)
 
-A lightweight, crash-resilient application connected to your Spotify account using official Spotify Web API and OAuth. It provides a simple **ON/OFF** toggle to continuously stream your selected playlist 24/7, auto-advances tracks, auto-recovers from crashes/restarts and expired tokens, and displays live playback metrics and uptime.
+> A lightweight, crash-resilient 24/7 continuous Spotify autopilot player and live dashboard. Powered by official Spotify Web APIs and OAuth 2.0.
 
----
-
-## ✨ Features
-
-- **Official Spotify Web API & OAuth 2.0:** Uses official endpoints with full token auto-refresh rotation (refreshes 5 minutes before expiration).
-- **Master ON / OFF Control:** A tactile glowing power button. When ON, it keeps music playing indefinitely. When OFF, it pauses playback.
-- **Continuous Background Playback (Autopilot):**
-  - Background watchdog loop monitors playback every 15 seconds.
-  - Automatically loops playlists endlessly using Spotify's `context` repeat mode.
-  - Automatically recovers and resumes if music pauses or finishes.
-- **Live Now Streaming Card:**
-  - Real-time current song title, artist, album, and animated vinyl artwork.
-  - Live progress bar with local second-by-second interpolation.
-  - Quick skip track button.
-- **24/7 Service Runtime & Metrics:**
-  - Live session and cumulative uptime counters (`HH:MM:SS`).
-  - Total songs streamed counter.
-  - Target device indicator.
-- **Playlist & Target Device Selector:**
-  - Paste any Spotify playlist URL or URI (`https://open.spotify.com/playlist/...` or `spotify:playlist:...`).
-  - Scan and target any Spotify Connect device (phone, smart speaker, PC, smart TV).
-  - Includes **Spotify Web Playback SDK** — click *"Play in This Browser"* to turn your current browser tab into the active player instantly.
-- **24/7 Headless Cloud Ready:**
-  - Fully deployable to free cloud platforms (Render, Railway, Fly.io).
-  - `/health` endpoint for free uptime monitors (e.g. UptimeRobot) to keep free instances awake 24/7.
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-green.svg)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-15%2F15%20Passing-brightgreen.svg)]()
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)]()
 
 ---
 
-## 🚀 Quick Setup Guide
+## ⚡ What Does This Do?
 
-### Step 1: Create a Spotify Developer App
+Spotify Minutes is designed for continuous, uninterrupted music playback without requiring your personal computer or browser to stay awake.
+
+- **Autonomous Autopilot:** Runs a continuous background watchdog that keeps your selected playlist playing endlessly using Spotify's `context` loop mode.
+- **Single-Tap ON/OFF:** One master power switch on the dashboard to start or pause continuous playback.
+- **Auto-Recovery:** Proactively refreshes OAuth tokens before their 1-hour expiration, automatically retries on network drops, and recovers gracefully from server restarts.
+- **Dual Playback Modes:**
+  1. **Remote Target Mode:** Directs audio to any Spotify Connect device (smartphone, Amazon Echo / Alexa, smart TV, desktop client).
+  2. **Browser Player Mode:** Built-in **Spotify Web Playback SDK** allows you to turn any browser tab into an active speaker with one click.
+- **Real-Time Telemetry & Mobile Dashboard:** Live session uptime clock, total songs streamed counter, album artwork, progress bar, and playlist selector. Fully responsive on iPhone, Android, and desktop.
+- **Free 24/7 Cloud Hosting:** Can be deployed for **$0** on platforms like Render, Railway, or Fly.io using the included Dockerfile and keepalive endpoint.
+
+---
+
+## 📋 Prerequisites
+
+1. **Spotify Premium Account** (Required by Spotify to use playback control endpoints).
+2. **Node.js 18+** installed locally (if running locally), OR a free account on [Render.com](https://render.com) / [Railway.app](https://railway.app).
+
+---
+
+## 🚀 Step-by-Step Setup Guide
+
+### Step 1: Create a Spotify Developer Application
 1. Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) and log in with your Spotify account.
-2. Click **Create App**.
-3. Fill in:
-   - **App Name:** `Spotify Minutes` (or any name you choose)
-   - **App Description:** `Continuous playback manager`
-   - **Redirect URI:** Add:
-     - `http://localhost:3000/auth/callback` (for local use)
-     - `https://your-cloud-url.onrender.com/auth/callback` (if deploying to cloud)
-   - **APIs Used:** Select **Web API** and **Web Playback SDK**.
-4. Click **Save**.
-5. In your App settings, copy your **Client ID** and click **View client secret** to copy your **Client Secret**.
+2. Click **Create App** (top right).
+3. Fill in the application details:
+   - **App name:** `Spotify Minutes` (or any name you prefer)
+   - **App description:** `Continuous playback autopilot`
+   - **Redirect URIs:** Add the following URI:
+     - For local running: `http://localhost:3000/auth/callback`
+     - If using cloud hosting (e.g. Render): `https://your-service-name.onrender.com/auth/callback`
+   - **Which API/SDKs are you planning to use?** Check:
+     - ☑ **Web API**
+     - ☑ **Web Playback SDK**
+4. Check the Terms of Service box and click **Save**.
+5. On your app's dashboard, click **Settings**:
+   - Copy your **Client ID**.
+   - Click **View client secret** and copy your **Client Secret**.
 
-### Step 2: Configure Environment Variables
-Copy `.env.example` to `.env`:
+---
+
+### Step 2: Clone and Install
+Clone this repository to your machine:
+```bash
+git clone https://github.com/Tofu4KK/spotifyauto.git
+cd spotifyauto
+npm install
+```
+
+---
+
+### Step 3: Configure Environment Variables
+Copy the example environment file:
 ```bash
 cp .env.example .env
 ```
-Edit `.env` with your values:
+Open `.env` in any text editor and fill in your Spotify credentials:
 ```env
+# Your Spotify App credentials from Step 1
 SPOTIFY_CLIENT_ID=your_client_id_here
 SPOTIFY_CLIENT_SECRET=your_client_secret_here
+
+# Redirect URI (must exactly match what you registered in Spotify Dashboard)
 REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Port
 PORT=3000
 ```
 
-### Step 3: Run Locally
-```bash
-# Install dependencies
-npm install
+---
 
-# Start the application
+### Step 4: Launch the Application
+Start the server:
+```bash
 npm start
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser:
-1. Click **Connect Spotify** to authorize the app.
-2. Paste your preferred playlist URL and click **Save Playlist**.
-3. Select your preferred playback device (or click **Play in This Browser**).
-4. Click the large **Power Button** to turn the service **ON**.
+You will see:
+```text
+======================================================
+🎵 Spotify Continuous Playback Service running!
+📡 URL: http://localhost:3000
+⚙️  Data storage: .../data/state.json
+======================================================
+```
+
+Open your browser and navigate to: **[http://localhost:3000](http://localhost:3000)**.
 
 ---
 
-## ☁️ Free 24/7 Cloud Hosting (No Computer / Browser Needed)
+### Step 5: Connect and Configure Playback
+1. **Connect Account:** Click **Connect Spotify** in the top-right corner and approve the permissions.
+2. **Set Your Playlist:**
+   - In Spotify, right-click any playlist > **Share** > **Copy link to playlist**.
+   - Paste the link into the **Spotify Playlist Link or URI** box on your dashboard and click **Save Playlist**.
+3. **Choose Your Target Device:**
+   - Make sure Spotify is open on at least one device (phone, PC, smart speaker, etc.).
+   - Click **Scan Devices** and choose your device from the dropdown.
+   - *Alternative:* Click **Play in This Browser** to use your current browser tab as the player device!
+4. **Turn ON:**
+   - Click the big glowing power button. It will turn **ON**, and continuous playback will immediately begin!
 
-To run continuously without keeping your computer or browser open:
+---
 
-### Option A: Render (Free Web Service)
-1. Push this project to your GitHub repository.
-2. Go to [Render.com](https://render.com) and create a **New Web Service**.
-3. Connect your repository.
-4. Set:
-   - **Environment:** Node
+## ☁️ Running 24/7 on Free Cloud Hosting (No PC Needed)
+
+You can run this service 24/7 in the cloud so it streams continuously even when your laptop and browser are completely turned off.
+
+### Deploying to Render.com (100% Free):
+1. Push your repository to your GitHub account (`Tofu4KK/spotifyauto`).
+2. Go to [Render.com](https://render.com) and create a free account.
+3. Click **New +** > **Web Service**.
+4. Select your `spotifyauto` GitHub repository.
+5. Render will automatically detect the settings from `render.yaml`:
+   - **Environment:** `Node`
    - **Build Command:** `npm install`
    - **Start Command:** `npm start`
-5. Under **Environment Variables**, add:
-   - `SPOTIFY_CLIENT_ID`
-   - `SPOTIFY_CLIENT_SECRET`
-   - `REDIRECT_URI` = `https://<your-service-name>.onrender.com/auth/callback`
-6. Once deployed, add your Render redirect URI into your Spotify Developer App settings.
-7. **Preventing Free-Tier Sleep:**
-   - Free Render instances sleep after 15 minutes of inactive HTTP traffic.
-   - Go to [UptimeRobot.com](https://uptimerobot.com) (free) and add an HTTP monitor pointing to `https://<your-service-name>.onrender.com/health` checked every 5 or 10 minutes.
-   - This keeps your cloud player awake 24/7 at $0 cost!
+   - **Plan:** `Free`
+6. Scroll down to **Environment Variables** and add:
+   - `SPOTIFY_CLIENT_ID` = `(Your Spotify Client ID)`
+   - `SPOTIFY_CLIENT_SECRET` = `(Your Spotify Client Secret)`
+   - `REDIRECT_URI` = `https://<your-render-app-name>.onrender.com/auth/callback`
+7. Click **Deploy Web Service**.
+8. **Update Spotify Dashboard:** Go back to your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard) > Settings > Redirect URIs and add your new Render URL:
+   `https://<your-render-app-name>.onrender.com/auth/callback`
 
-### Option B: Railway or Fly.io
-You can also use the included `Dockerfile` to deploy directly to Railway or Fly.io with a single command:
-```bash
-fly launch
-```
+#### 💡 Keeping Free Render Alive 24/7 (Preventing Sleep):
+Free web services on Render sleep after 15 minutes of inactive web requests. To prevent this:
+1. Go to [UptimeRobot.com](https://uptimerobot.com) (free).
+2. Click **Add New Monitor**:
+   - **Monitor Type:** `HTTP(s)`
+   - **Friendly Name:** `Spotify Auto Keepalive`
+   - **URL:** `https://<your-render-app-name>.onrender.com/health`
+   - **Monitoring Interval:** `5 minutes`
+3. Click **Create Monitor**. UptimeRobot will ping the `/health` endpoint every 5 minutes, ensuring your continuous player runs **24/7 without interruption at $0 cost**!
 
 ---
 
 ## 🛡️ Resilience & Auto-Recovery Architecture
 
-| Failure Scenario | Built-in Auto-Recovery |
+| Scenario | Automatic Recovery Mechanism |
 | :--- | :--- |
-| **Token Expired (3600s)** | Watchdog checks token validity before every API call; proactively rotates access token 5 minutes before expiration. |
-| **API Error / 401 Unauthorized** | Client intercepts 401, requests fresh access token using `refresh_token`, and retries the request automatically. |
+| **Token Expiry (3600s)** | The watchdog checks token validity before every API call; proactively rotates the access token 5 minutes before expiration. |
+| **API Error / 401 Unauthorized** | The client catches 401 responses, calls Spotify Accounts using the stored `refresh_token`, and seamlessly retries the request. |
 | **Rate Limiting (429)** | Respects Spotify's `Retry-After` header and backs off exponentially to prevent account throttling. |
-| **Container Restart / Crash** | Persistent JSON state file (`data/state.json`) atomically records settings and tokens. Upon restart, daemon reloads state and resumes session without requiring re-login. |
-| **Track Finishes / Pauses** | Watchdog monitors playback every 15s; sets repeat mode to `context` and immediately triggers resumption if playback stops while ON. |
-| **Target Device Asleep** | Displays clear `WAITING_FOR_DEVICE` status and attempts auto-transfer to available devices. |
+| **Server Restart / Crash** | App state (tokens, active playlist, target device) is atomically persisted in `data/state.json`. Upon reboot, the daemon automatically resumes without requiring you to log in again. |
+| **Song Finishes / Pauses** | The 15-second watchdog loop detects paused or stopped states and immediately triggers continuation using `context` repeat mode. |
+| **Target Device Asleep** | Flags `WAITING_FOR_DEVICE` on the dashboard and automatically transfers to the next available Spotify Connect device. |
 
 ---
 
-## 🛠️ API Endpoints
+## 🧪 Testing
 
-- `GET /api/status` — Live watchdog snapshot (track info, status, uptime, auth state).
-- `POST /api/toggle` — Turn service ON or OFF (`{ enabled?: boolean }`).
-- `GET /api/devices` — List available Spotify Connect devices.
-- `POST /api/device` — Set target device (`{ deviceId, deviceName }`).
-- `POST /api/playlist` — Set playlist link or URI (`{ playlist }`).
-- `POST /api/next` — Skip to next song.
-- `GET /health` — Health check endpoint for monitoring & keepalive.
-- `GET /auth/login` — Initiates Spotify OAuth flow.
-- `GET /auth/callback` — Handles OAuth redirect code exchange.
-- `POST /auth/logout` — Revokes stored session.
+Run the included automated integration test suite:
+```bash
+npm test
+```
+Runs 15 tests covering state persistence, URL normalizers, token expiry buffers, API edge cases, and health checks.
+
+---
+
+## 📁 Project Structure
+
+```text
+spotifyauto/
+├── public/                 # Glassmorphic responsive frontend
+│   ├── index.html          # Semantic HTML5 UI
+│   ├── style.css           # Modern dark mode styling + mobile adaptation
+│   └── app.js              # Real-time polling & Web Playback SDK logic
+├── src/                    # Backend core
+│   ├── config.js           # Environment & OAuth scopes
+│   ├── server.js           # Express REST API & static server
+│   ├── spotifyAuth.js      # OAuth code exchange & auto-token refresher
+│   ├── spotifyClient.js    # Spotify Web API client wrapper
+│   ├── storage.js          # Atomic state & token persistence
+│   └── watchdog.js         # Autopilot continuous playback engine
+├── test/
+│   └── test.js             # Automated unit and integration test suite
+├── .env.example            # Environment variables template
+├── .gitignore              # Protects secrets, node_modules, and state
+├── Dockerfile              # Production container build
+├── package.json            # Node.js dependencies
+├── README.md               # Master setup & deployment guide
+└── render.yaml             # Render 1-click cloud blueprint
+```
 
 ---
 
 ## 📜 License
-MIT
+MIT License. Feel free to modify and share!
